@@ -52,6 +52,12 @@ class Downloader:
         self.destination_path = destination_path
 
     def download(self, to_search: str = "sneeze"):
+        folder_path = f"{self.destination_path}/{to_search}"
+
+        # If the folder to store hasn't created yet, then create it
+        if to_search not in os.listdir(self.destination_path):
+            os.mkdir(folder_path)
+
         results = self.client.text_search(
             query=to_search,
             filter=f"original_filename:{to_search}",
@@ -68,7 +74,7 @@ class Downloader:
             for sound in tqdm(results, total=len(results.results)):
                 try:
                     sound.retrieve(
-                        f"{self.destination_path}/{to_search}",
+                        folder_path,
                         name=f"{sound.id}_{sound.name}.{sound.type}",
                     )
                 except (ContentTooShortError, URLError, OSError) as e:
