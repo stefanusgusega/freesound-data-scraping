@@ -19,7 +19,11 @@ class Downloader:
     """
 
     def __init__(
-        self, api_key: str = None, auth_token: str = None, errors_json_path: str = None
+        self,
+        api_key: str = None,
+        auth_token: str = None,
+        errors_json_path: str = None,
+        destination_path: str = None,
     ) -> None:
         # Load the environment variables on .env
         load_dotenv()
@@ -45,6 +49,8 @@ class Downloader:
             with open(errors_json_path, "r", encoding="utf-8") as f:
                 self.all_error_instances = json.load(f)
 
+        self.destination_path = destination_path
+
     def download(self, to_search: str = "sneeze"):
         results = self.client.text_search(
             query=to_search,
@@ -62,7 +68,7 @@ class Downloader:
             for sound in tqdm(results, total=len(results.results)):
                 try:
                     sound.retrieve(
-                        f"data/{to_search}",
+                        f"{self.destination_path}/{to_search}",
                         name=f"{sound.id}_{sound.name}.{sound.type}",
                     )
                 except (ContentTooShortError, URLError, OSError) as e:
@@ -100,7 +106,7 @@ class Downloader:
             for sound_instance in sound_kind["instances"]:
                 try:
                     sound_instance.retrieve(
-                        f"data/{to_search}",
+                        f"{self.destination_path}/{to_search}",
                         name=f"{sound_instance.name}.{sound_instance.type}",
                     )
                 except (ContentTooShortError, URLError, OSError) as e:
