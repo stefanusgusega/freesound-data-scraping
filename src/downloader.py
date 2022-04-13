@@ -2,7 +2,6 @@
 Main program
 """
 import os
-import sys
 from urllib.error import ContentTooShortError, URLError
 import json
 import freesound
@@ -19,19 +18,20 @@ class Downloader:
     This is for downloading the data and provide redownload too
     """
 
-    def __init__(self, errors_json_path: str = None) -> None:
+    def __init__(
+        self, api_key: str = None, auth_token: str = None, errors_json_path: str = None
+    ) -> None:
         # Load the environment variables on .env
         load_dotenv()
 
-        self.api_key = os.getenv("API_KEY")
-        self.auth_token = os.getenv("AUTH_TOKEN")
+        if api_key is None:
+            api_key = os.getenv("API_KEY")
+        if auth_token is None:
+            auth_token = os.getenv("AUTH_TOKEN")
+
+        self.api_key = api_key
+        self.auth_token = auth_token
         ic(self.auth_token)
-        if self.api_key is None:
-            print(
-                "You need to set your API key as an environment variable",
-            )
-            print("named FREESOUND_API_KEY")
-            sys.exit(-1)
 
         self.client = freesound.FreesoundClient()
         self.client.set_token(self.api_key, "token")
