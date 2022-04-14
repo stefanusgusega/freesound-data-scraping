@@ -4,6 +4,7 @@ Main program
 import os
 from urllib.error import ContentTooShortError, URLError
 import json
+import pickle as pkl
 import freesound
 from dotenv import load_dotenv
 from icecream import ic
@@ -21,7 +22,8 @@ class Downloader:
         self,
         api_key: str = None,
         auth_token: str = None,
-        errors_json_path: str = None,
+        error_summary_json_path: str = None,
+        error_instances_pkl_path: str = None,
         destination_path: str = None,
     ) -> None:
         # Load the environment variables on .env
@@ -40,13 +42,19 @@ class Downloader:
         self.client.set_token(self.api_key, "token")
         self.client.set_token(self.auth_token, "oauth")
 
-        # Init the error instances array
+        # Init the error instances and error summary array
         self.all_error_instances = []
+        self.error_summary = []
 
-        # Load the errors specified on JSON file
-        if errors_json_path is not None:
-            with open(errors_json_path, "r", encoding="utf-8") as f:
-                self.all_error_instances = json.load(f)
+        # Load the error summary specified on JSON file
+        if error_summary_json_path is not None:
+            with open(error_summary_json_path, "r", encoding="utf-8") as f:
+                self.error_summary = json.load(f)
+
+        # Load the error instances specified on pickled file
+        if error_instances_pkl_path is not None:
+            with open(error_instances_pkl_path, "r", encoding="utf-8") as f:
+                self.all_error_instances = pkl.load(f)
 
         self.destination_path = destination_path
 
@@ -87,23 +95,17 @@ class Downloader:
             # Go to next page of the pagination
             results = results.next_page()
 
+        # Error summary consists of what to search and the error description
+        self.error_summary = [dict(to_search=to_search, errors=errors)]
+
         # Store all error sound instances and the error description itself to the attribute
         self.all_error_instances = [
             dict(to_search=to_search, instances=error_sound_instances, errors=errors)
         ]
         ic(self.all_error_instances)
 
-        # Save all error instances and the error itself to json file if there are
-        if len(self.all_error_instances) != 0:
-            with open(
-                os.path.join(self.destination_path, "errors.json"),
-                "w",
-                encoding="utf-8",
-            ) as f:
-                json.dump(self.all_error_instances, f)
-
-        else:
-            print("No errors. Ignoring write to json file.")
+        # Dump errors
+        self.save_errors()
 
     def redownload(self):
         errors = []
@@ -129,19 +131,39 @@ class Downloader:
                         f"Error on #{sound_instance.id} - {sound_instance.name} : {str(e)}"
                     )
 
+        # Error summary consists of what to search and the error description
+        self.error_summary = [dict(to_search=to_search, errors=errors)]
+
         # Store all error sound instances and the error description itself to the attribute
         self.all_error_instances = [
             dict(to_search=to_search, instances=error_sound_instances, errors=errors)
         ]
+        ic(self.all_error_instances)
 
-        # Save all error instances and the error itself to json file if there are
+        # Dump errors
+        self.save_errors()
+
+    def save_errors(self):
+        # Should assume this
+        assert len(self.error_summary) == len(
+            self.all_error_instances
+        ), "Error summary array length is not equal with error instances array."
+
+        # Save error summary and error instances if there are
         if len(self.all_error_instances) != 0:
+            # Save error summary
             with open(
-                os.path.join(self.destination_path, "errors.json"),
+                os.path.join(self.destination_path, "error_summary.json"),
                 "w",
                 encoding="utf-8",
             ) as f:
-                json.dump(self.all_error_instances, f)
+                json.dump(self.error_summary, f)
+
+            # Save error instances
+            with open(
+                os.path.join(self.destination_path, "error_instances.pkl"), "wb"
+            ) as f:
+                pkl.dump(self.all_error_instances, f)
 
         else:
-            print("No errors. Ignoring write to json file.")
+            print("No errors. Ignoring write to json and pickle file.")
