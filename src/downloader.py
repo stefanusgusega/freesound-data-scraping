@@ -10,7 +10,6 @@ from icecream import ic
 from tqdm import tqdm
 
 PER_PAGE_COUNT = 15
-DUMP_PATH = "dump"
 
 
 class Downloader:
@@ -97,7 +96,9 @@ class Downloader:
         # Save all error instances and the error itself to json file if there are
         if len(self.all_error_instances) != 0:
             with open(
-                os.path.join(DUMP_PATH, "errors.json"), "w", encoding="utf-8"
+                os.path.join(self.destination_path, "errors.json"),
+                "w",
+                encoding="utf-8",
             ) as f:
                 json.dump(self.all_error_instances, f)
 
@@ -136,7 +137,9 @@ class Downloader:
         # Save all error instances and the error itself to json file if there are
         if len(self.all_error_instances) != 0:
             with open(
-                os.path.join(DUMP_PATH, "errors.json"), "w", encoding="utf-8"
+                os.path.join(self.destination_path, "errors.json"),
+                "w",
+                encoding="utf-8",
             ) as f:
                 json.dump(self.all_error_instances, f)
 
