@@ -1,6 +1,7 @@
 """
 Main program
 """
+import math
 import os
 from urllib.error import ContentTooShortError, URLError
 import json
@@ -71,7 +72,7 @@ class Downloader:
             fields="id,name,tags,username,license,previews,type",
         )
 
-        page_count = results.count // PER_PAGE_COUNT
+        page_count = math.ceil(results.count / PER_PAGE_COUNT)
 
         error_sound_instances = []
         errors = []
