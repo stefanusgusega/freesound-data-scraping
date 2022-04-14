@@ -112,7 +112,10 @@ class Downloader:
         error_sound_instances = []
         for sound_kind in self.all_error_instances:
             to_search = sound_kind["to_search"]
-            for sound_instance in sound_kind["instances"]:
+            print(f"Downloading '{to_search}' sound...")
+            for sound_instance in tqdm(
+                sound_kind["instances"], total=len(sound_kind["instances"])
+            ):
                 try:
                     sound_instance.retrieve(
                         f"{self.destination_path}/{to_search}",
