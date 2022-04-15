@@ -93,8 +93,9 @@ class Downloader:
                     error_sound_instances.append(sound)
                     print(f"Error on #{sound.id} - {sound.name} : {str(e)}")
 
-            # Go to next page of the pagination
-            results = results.next_page()
+            # Go to next page of the pagination if not last page
+            if i < page_count - 1:
+                results = results.next_page()
 
         # Error summary consists of what to search and the error description
         self.error_summary = [dict(to_search=to_search, errors=errors)]
@@ -109,6 +110,10 @@ class Downloader:
         self.save_errors()
 
     def redownload(self):
+        # Reset the error instances and summary
+        self.error_summary = []
+        self.all_error_instances = []
+
         errors = []
         error_sound_instances = []
         for sound_kind in self.all_error_instances:
@@ -135,14 +140,20 @@ class Downloader:
                         f"Error on #{sound_instance.id} - {sound_instance.name} : {str(e)}"
                     )
 
-        # Error summary consists of what to search and the error description
-        self.error_summary = [dict(to_search=to_search, errors=errors)]
+            # Append the error summary for this sound kind
+            self.error_summary.append([dict(to_search=to_search, errors=errors)])
 
-        # Store all error sound instances and the error description itself to the attribute
-        self.all_error_instances = [
-            dict(to_search=to_search, instances=error_sound_instances, errors=errors)
-        ]
-        ic(self.all_error_instances)
+            # Append the error instance too
+            self.all_error_instances.append(
+                [
+                    dict(
+                        to_search=to_search,
+                        instances=error_sound_instances,
+                        errors=errors,
+                    )
+                ]
+            )
+            ic(self.all_error_instances)
 
         # Dump errors
         self.save_errors()
